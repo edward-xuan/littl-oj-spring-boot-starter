@@ -14,7 +14,7 @@
       "defaultValue": "<f>"
     },
     {
-      "name": "hentai.oj.runTime",
+      "name": "hentai.oj.run-time",
       "type": "java.lang.Long",
       "description": "设置代码运行时长，超时报错，单位毫秒.",
       "sourceType": "org.hentai.oj.bean.OjProperties",

@@ -2,25 +2,40 @@ package org.hentai.oj.bean;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @ConfigurationProperties(prefix = "hentai.oj")
 public class OjProperties {
 
+    private String runSh = "/bin/sh";
     private String codePath;
-    private String fileNameSign;
-    private Long runTime;
-    private Map<String, String> codeTypeAndRun;
+    private String fileNameSign = "<f>";
+    private Long runTime = 2000L;
+    private Map<String, String> codeTypeAndRun = new HashMap<String, String>() {{
+        put("c", "gcc <f>.c -o <f> && ./<f>");
+        put("python3", "python3 <f>.py");
+        put("go", "go build <f>.go && ./<f>");
+    }};
 
 
     public OjProperties() {
     }
 
-    public OjProperties(String codePath, String fileNameSign, Long runTime, Map<String, String> codeTypeAndRun) {
+    public OjProperties(String runSh, String codePath, String fileNameSign, Long runTime, Map<String, String> codeTypeAndRun) {
+        this.runSh = runSh;
         this.codePath = codePath;
         this.fileNameSign = fileNameSign;
         this.runTime = runTime;
         this.codeTypeAndRun = codeTypeAndRun;
+    }
+
+    public String getRunSh() {
+        return runSh;
+    }
+
+    public void setRunSh(String runSh) {
+        this.runSh = runSh;
     }
 
     public String getCodePath() {

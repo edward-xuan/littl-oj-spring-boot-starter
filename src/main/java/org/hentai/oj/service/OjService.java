@@ -50,9 +50,11 @@ public class OjService {
     }
 
     public Map<Boolean, String> runCommand(String command, String in, String out) throws IOException, InterruptedException {
-        Process exec = Runtime.getRuntime().exec(command);
+
+        Process exec = Runtime.getRuntime().exec(ojProperties.getRunSh());
 
         BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(exec.getOutputStream()));
+        bw.write(command);
         bw.write(in);
         bw.newLine();
         bw.flush();
@@ -62,7 +64,11 @@ public class OjService {
     }
 
     public Map<Boolean, String> runCommand(String command, String out) throws IOException, InterruptedException {
-        Process exec = Runtime.getRuntime().exec(command);
+        Process exec = Runtime.getRuntime().exec(ojProperties.getRunSh());
+        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(exec.getOutputStream()));
+        bw.write(command);
+        bw.flush();
+        bw.close();
         return judgeCommand(exec, out);
     }
 
@@ -89,7 +95,7 @@ public class OjService {
             if (sb.toString().trim().equals(out.trim())) {
                 answerType.put(true, "回答正确");
             } else {
-                answerType.put(false, "回答错误");
+                answerType.put(false, String.format("你的答案: %s\t正确答案: %s", sb.toString(), out));
             }
             return answerType;
         }

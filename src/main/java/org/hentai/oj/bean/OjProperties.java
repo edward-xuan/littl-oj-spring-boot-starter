@@ -2,25 +2,25 @@ package org.hentai.oj.bean;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.util.List;
+import java.util.Map;
 
 @ConfigurationProperties(prefix = "hentai.oj")
 public class OjProperties {
 
     private String codePath;
-
-    private List<String> codeTypes;
-
+    private String fileNameSign;
     private Long runTime;
+    private Map<String, String> codeTypeAndRun;
 
 
     public OjProperties() {
     }
 
-    public OjProperties(String codePath, List<String> codeTypes, Long runTime) {
+    public OjProperties(String codePath, String fileNameSign, Long runTime, Map<String, String> codeTypeAndRun) {
         this.codePath = codePath;
-        this.codeTypes = codeTypes;
+        this.fileNameSign = fileNameSign;
         this.runTime = runTime;
+        this.codeTypeAndRun = codeTypeAndRun;
     }
 
     public String getCodePath() {
@@ -31,12 +31,12 @@ public class OjProperties {
         this.codePath = codePath;
     }
 
-    public List<String> getCodeTypes() {
-        return codeTypes;
+    public String getFileNameSign() {
+        return fileNameSign;
     }
 
-    public void setCodeTypes(List<String> codeTypes) {
-        this.codeTypes = codeTypes;
+    public void setFileNameSign(String fileNameSign) {
+        this.fileNameSign = fileNameSign;
     }
 
     public Long getRunTime() {
@@ -45,5 +45,13 @@ public class OjProperties {
 
     public void setRunTime(Long runTime) {
         this.runTime = runTime;
+    }
+
+    public Map<String, String> getCodeTypeAndRun() {
+        return codeTypeAndRun;
+    }
+
+    public void setCodeTypeAndRun(Map<String, String> codeTypeAndRun) {
+        this.codeTypeAndRun = codeTypeAndRun;
     }
 }

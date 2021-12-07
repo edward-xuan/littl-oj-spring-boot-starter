@@ -13,18 +13,19 @@ public class OjService {
     @Autowired
     OjProperties ojProperties;
 
-    public boolean saveCodeFile(String username, String code, String codeType) throws IOException {
+    public boolean saveCodeFile(String username, String code, String fileSuffix) throws IOException {
 
-        if (!ojProperties.getCodeTypes().contains(codeType)) {
+        if (!ojProperties.getCodeTypeAndRun().containsKey(fileSuffix)) {
             return false;
         }
 
         File dir = new File(ojProperties.getCodePath());
+
         if (!dir.exists()) {
             dir.mkdirs();
         }
 
-        String allPath = String.format("%s/%s.%s", ojProperties.getCodePath(), username, codeType);
+        String allPath = String.format("%s/%s.%s", ojProperties.getCodePath(), username, fileSuffix);
 
         File f = new File(allPath);
         if (!f.exists()) {
@@ -41,27 +42,10 @@ public class OjService {
     }
 
     public String getCommand(String username, String codeType) throws CodeTypeException {
-//        String cmd = ojProperties.getCodePath();
-        String cmd = String.format("chmod 777 %s && %s", ojProperties.getCodePath(), ojProperties.getCodePath());
-        switch (codeType) {
-            case "c":
-                cmd = String.format("%s && gcc %s.c -o %s && ./%s",
-                        cmd, username, username, username);
-                break;
-            case "py":
-                cmd = String.format("%s && python3 %s.py", cmd, username);
-                break;
-            case "go":
-                cmd = String.format("%s && go build %s.go && ./%s",
-                        cmd, username, username);
-                break;
-            case "java":
-                cmd = String.format("%s && java %s.java && javac %s",
-                        cmd, username, username);
-                break;
-            default:
-                throw new CodeTypeException();
-        }
+        String cmd = ojProperties.getCodeTypeAndRun().get(codeType).replace(ojProperties.getFileNameSign(), username);
+
+        cmd = String.format("cd %s && %s", ojProperties.getCodePath(), cmd);
+
         return cmd;
     }
 

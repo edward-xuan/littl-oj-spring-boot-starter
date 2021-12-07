@@ -1,0 +1,30 @@
+{
+  "properties": [
+    {
+      "name": "hentai.oj.code-path",
+      "type": "java.lang.String",
+      "description": "代码文件储存路径.",
+      "sourceType": "org.hentai.oj.bean.OjProperties"
+    },
+    {
+      "name": "hentai.oj.file-name-sign",
+      "type": "java.lang.String",
+      "description": "文件名替代符号，没有后缀.",
+      "sourceType": "org.hentai.oj.bean.OjProperties",
+      "defaultValue": "<f>"
+    },
+    {
+      "name": "hentai.oj.runTime",
+      "type": "java.lang.Long",
+      "description": "设置代码运行时长，超时报错，单位毫秒.",
+      "sourceType": "org.hentai.oj.bean.OjProperties",
+      "defaultValue": 2000
+    },
+    {
+      "name": "hentai.oj.code-type-and-run",
+      "type": "java.util.Map<java.lang.String, java.lang.String>",
+      "description": "语言类型：语言运行代码，如{c: gcc <f>.c -o <f> && ./<f>}.",
+      "sourceType": "org.hentai.oj.bean.OjProperties"
+    }
+  ]
+}

@@ -2,8 +2,7 @@ package org.hentai.oj.bean;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @ConfigurationProperties(prefix = "hentai.oj")
 public class OjProperties {
@@ -12,17 +11,18 @@ public class OjProperties {
     private String codePath;
     private String fileNameSign = "<f>";
     private Long runTime = 2000L;
-    private Map<String, String> codeTypeAndRun = new HashMap<String, String>() {{
-        put("c", "gcc <f>.c -o <f> && ./<f>");
-        put("python3", "python3 <f>.py");
-        put("go", "go build <f>.go && ./<f>");
+    private Map<String, List<String>> codeTypeAndRun = new HashMap<String, List<String>>() {{
+        put("c", Arrays.asList("c", "gcc <f>.c -o <f>", "./<f>"));
+        put("python2", Arrays.asList("py", "python2 <f>.py"));
+        put("python3", Arrays.asList("py", "python3 <f>.py"));
+        put("go", Arrays.asList("go", "go build <f>.go", "./<f>"));
     }};
 
 
     public OjProperties() {
     }
 
-    public OjProperties(String runSh, String codePath, String fileNameSign, Long runTime, Map<String, String> codeTypeAndRun) {
+    public OjProperties(String runSh, String codePath, String fileNameSign, Long runTime, Map<String, List<String>> codeTypeAndRun) {
         this.runSh = runSh;
         this.codePath = codePath;
         this.fileNameSign = fileNameSign;
@@ -62,11 +62,11 @@ public class OjProperties {
         this.runTime = runTime;
     }
 
-    public Map<String, String> getCodeTypeAndRun() {
+    public Map<String, List<String>> getCodeTypeAndRun() {
         return codeTypeAndRun;
     }
 
-    public void setCodeTypeAndRun(Map<String, String> codeTypeAndRun) {
+    public void setCodeTypeAndRun(Map<String, List<String>> codeTypeAndRun) {
         this.codeTypeAndRun = codeTypeAndRun;
     }
 }

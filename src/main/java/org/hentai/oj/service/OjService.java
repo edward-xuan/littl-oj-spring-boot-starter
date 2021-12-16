@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.*;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class OjService {
@@ -17,14 +18,16 @@ public class OjService {
     /**
      * 文件保存
      *
-     * @param fileName   纯文件名 没有文件后缀
-     * @param code       代码内容
-     * @param fileSuffix 文件后缀
+     * @param fileName 纯文件名 没有文件后缀
+     * @param code     代码内容
+     * @param codeType 代码类型
      * @return 代码是否保存成功
      */
-    public boolean saveCodeFile(String fileName, String code, String fileSuffix) throws IOException {
+    public boolean saveCodeFile(String fileName, String code, String codeType) throws IOException {
 
-        if (!ojProperties.getCodeTypeAndRun().containsKey(fileSuffix)) {
+        Map<String, List<String>> codeTypeAndRun = ojProperties.getCodeTypeAndRun();
+
+        if (!codeTypeAndRun.containsKey(codeType)) {
             return false;
         }
 
@@ -33,6 +36,8 @@ public class OjService {
         if (!dir.exists()) {
             dir.mkdirs();
         }
+
+        String fileSuffix = codeTypeAndRun.get(codeType).get(0);
 
         String allPath = String.format("%s%s%s.%s", ojProperties.getCodePath(), File.separator, fileName, fileSuffix);
 
@@ -58,15 +63,16 @@ public class OjService {
      * @return 文件编译和运行的指令
      */
     public Map<String, String> getCompileAndRunOrder(String fileName, String codeType) {
-        String[] orders = ojProperties.getCodeTypeAndRun().get(codeType).split(" && ");
-        if (orders.length == 1) {
+
+        List<String> orders = ojProperties.getCodeTypeAndRun().get(codeType);
+        if (orders.size() == 2) {
             return new HashMap<String, String>() {{
-                put(OjParamName.RUN, orders[0].replace(ojProperties.getFileNameSign(), fileName));
+                put(OjParamName.RUN, orders.get(1).replace(ojProperties.getFileNameSign(), fileName));
             }};
-        } else if (orders.length == 2) {
+        } else if (orders.size() == 3) {
             return new HashMap<String, String>() {{
-                put(OjParamName.COMPILE, orders[0].replace(ojProperties.getFileNameSign(), fileName));
-                put(OjParamName.RUN, orders[1].replace(ojProperties.getFileNameSign(), fileName));
+                put(OjParamName.COMPILE, orders.get(1).replace(ojProperties.getFileNameSign(), fileName));
+                put(OjParamName.RUN, orders.get(2).replace(ojProperties.getFileNameSign(), fileName));
             }};
         }
         return null;
@@ -110,7 +116,8 @@ public class OjService {
         try {
             process = Runtime.getRuntime().exec(ojProperties.getRunSh());
             execWrite(new BufferedWriter(new OutputStreamWriter(process.getOutputStream())), command);
-            process.waitFor();
+//            process.waitFor();
+            Thread.sleep(ojProperties.getRunTime());
             return judge(process, out);
 
         } catch (Exception e) {
@@ -219,99 +226,6 @@ public class OjService {
         bw.newLine();
         bw.flush();
         bw.close();
-    }
-
-    //-------------------------------------------以下为编译运行未分离代码，仍可使用----------------------
-
-    /**
-     * 获取指令
-     *
-     * @param filename 文件名 无后缀
-     * @param codeType 代码类型
-     * @return 编译运行一体指令
-     */
-    public String getCommand(String filename, String codeType) throws CodeTypeException {
-        String cmd = ojProperties.getCodeTypeAndRun().get(codeType).replace(ojProperties.getFileNameSign(), filename);
-
-        cmd = String.format("cd %s && %s", ojProperties.getCodePath(), cmd);
-
-        return cmd;
-    }
-
-    /**
-     * 编译并运行 有传入参数
-     *
-     * @param command 指令
-     * @param in      传入参数
-     * @param out     目标输出
-     * @return 答题结果
-     */
-    public Map<Boolean, String> runCommand(String command, String in, String out) throws IOException, InterruptedException {
-
-        Process exec = Runtime.getRuntime().exec(ojProperties.getRunSh());
-
-        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(exec.getOutputStream()));
-        bw.write(command);
-        bw.write(in);
-        bw.newLine();
-        bw.flush();
-        bw.close();
-
-        return judgeCommand(exec, out);
-    }
-
-    /**
-     * 编译并运行 无传入参数
-     *
-     * @param command 指令
-     * @param out     目标输出
-     * @return 答题结果
-     */
-    public Map<Boolean, String> runCommand(String command, String out) throws IOException, InterruptedException {
-        Process exec = Runtime.getRuntime().exec(ojProperties.getRunSh());
-        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(exec.getOutputStream()));
-        bw.write(command);
-        bw.flush();
-        bw.close();
-        return judgeCommand(exec, out);
-    }
-
-    /**
-     * 读取输出并判断
-     *
-     * @param exec 子进程
-     * @param out  目标输出
-     * @return 答题结果
-     */
-    private Map<Boolean, String> judgeCommand(Process exec, String out) throws IOException, InterruptedException {
-        Thread.sleep(ojProperties.getRunTime());
-        BufferedReader br;
-        if (exec.exitValue() == 0) {
-            br = new BufferedReader(new InputStreamReader(exec.getInputStream()));
-        } else {
-            br = new BufferedReader(new InputStreamReader(exec.getErrorStream()));
-        }
-
-        StringBuilder sb = new StringBuilder();
-        String line;
-        while ((line = br.readLine()) != null) {
-            sb.append(line);
-            sb.append("\n");
-        }
-        br.close();
-        exec.destroy();
-
-        Map<Boolean, String> answerType = new HashMap<>();
-        if (out != null && !out.equals("")) {
-            if (sb.toString().trim().equals(out.trim())) {
-                answerType.put(true, "回答正确");
-            } else {
-                answerType.put(false, String.format("你的答案: %s\t正确答案: %s", sb.toString(), out));
-            }
-            return answerType;
-        }
-
-        return null;
     }
 
 }

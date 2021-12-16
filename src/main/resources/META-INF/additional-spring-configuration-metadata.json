@@ -23,7 +23,7 @@
     {
       "name": "hentai.oj.code-type-and-run",
       "type": "java.util.Map<java.lang.String, java.lang.String>",
-      "description": "语言类型：语言运行代码，如{c: gcc <f>.c -o <f> && ./<f>}.",
+      "description": "语言类型：[文件后缀， 编译指令(部分可以不写，或者写到运行指令中)， 运行指令]，如{c: [c, gcc <f>.c -o <f>, ./<f>]}.",
       "sourceType": "org.hentai.oj.bean.OjProperties"
     }
   ]

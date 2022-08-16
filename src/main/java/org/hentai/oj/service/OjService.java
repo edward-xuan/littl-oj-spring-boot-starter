@@ -1,19 +1,31 @@
 package org.hentai.oj.service;
 
-import org.hentai.oj.bean.OjParamName;
-import org.hentai.oj.bean.OjProperties;
-import org.hentai.oj.err.CodeTypeException;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.hentai.oj.bean.OjAdminProperties;
+import org.hentai.oj.bean.OjOrder;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class OjService {
 
-    @Autowired
-    OjProperties ojProperties;
+    private OjAdminProperties ojAdminProperties;
+    private ProcessBuilder pb = new ProcessBuilder();
+
+    public OjService(OjAdminProperties ojAdminProperties) {
+        this.ojAdminProperties = ojAdminProperties;
+        pb.directory(new File(ojAdminProperties.getCodePath()));
+    }
+
+    public void setOjAdminProperties(OjAdminProperties ojAdminProperties) {
+        this.ojAdminProperties = ojAdminProperties;
+    }
+
+    public OjAdminProperties getOjAdminProperties() {
+        return ojAdminProperties;
+    }
 
     /**
      * 文件保存
@@ -25,13 +37,13 @@ public class OjService {
      */
     public boolean saveCodeFile(String fileName, String code, String codeType) throws IOException {
 
-        Map<String, List<String>> codeTypeAndRun = ojProperties.getCodeTypeAndRun();
+        Map<String, List<String>> codeTypeAndRun = ojAdminProperties.getCodeTypeAndRun();
 
         if (!codeTypeAndRun.containsKey(codeType)) {
             return false;
         }
 
-        File dir = new File(ojProperties.getCodePath());
+        File dir = new File(ojAdminProperties.getCodePath());
 
         if (!dir.exists()) {
             dir.mkdirs();
@@ -39,7 +51,7 @@ public class OjService {
 
         String fileSuffix = codeTypeAndRun.get(codeType).get(0);
 
-        String allPath = String.format("%s%s%s.%s", ojProperties.getCodePath(), File.separator, fileName, fileSuffix);
+        String allPath = String.format("%s%s%s.%s", ojAdminProperties.getCodePath(), File.separator, fileName, fileSuffix);
 
         File f = new File(allPath);
         if (!f.exists()) {
@@ -64,15 +76,15 @@ public class OjService {
      */
     public Map<String, String> getCompileAndRunOrder(String fileName, String codeType) {
 
-        List<String> orders = ojProperties.getCodeTypeAndRun().get(codeType);
+        List<String> orders = ojAdminProperties.getCodeTypeAndRun().get(codeType);
         if (orders.size() == 2) {
             return new HashMap<String, String>() {{
-                put(OjParamName.RUN, orders.get(1).replace(ojProperties.getFileNameSign(), fileName));
+                put(OjOrder.RUN, orders.get(1).replace(ojAdminProperties.getFileNameSign(), fileName));
             }};
         } else if (orders.size() == 3) {
             return new HashMap<String, String>() {{
-                put(OjParamName.COMPILE, orders.get(1).replace(ojProperties.getFileNameSign(), fileName));
-                put(OjParamName.RUN, orders.get(2).replace(ojProperties.getFileNameSign(), fileName));
+                put(OjOrder.COMPILE, orders.get(1).replace(ojAdminProperties.getFileNameSign(), fileName));
+                put(OjOrder.RUN, orders.get(2).replace(ojAdminProperties.getFileNameSign(), fileName));
             }};
         }
         return null;
@@ -85,11 +97,8 @@ public class OjService {
      * @return 编译状态
      */
     public Map<Boolean, String> compile(String command) throws IOException, InterruptedException {
-        Process exec = Runtime.getRuntime().exec(ojProperties.getRunSh());
-
-        execWrite(new BufferedWriter(new OutputStreamWriter(exec.getOutputStream())), command);
+        Process exec = pb.command(command.split("\\s+")).start();
         exec.waitFor();
-//        Thread.sleep(ojProperties.getRunTime());
         BufferedReader br;
         Map<Boolean, String> map = new HashMap<>();
         if (exec.exitValue() == 0) {
@@ -112,14 +121,13 @@ public class OjService {
      * @return 答题状态
      */
     public Map<Boolean, String> run(String command, String out) {
+        System.out.println(Arrays.asList(command.split("\\s+")));
         Process process = null;
         try {
-            process = Runtime.getRuntime().exec(ojProperties.getRunSh());
-            execWrite(new BufferedWriter(new OutputStreamWriter(process.getOutputStream())), command);
-//            process.waitFor();
-            Thread.sleep(ojProperties.getRunTime());
+            process = pb.command(command.split("\\s+")).start();
+            process.waitFor();
+            Thread.sleep(ojAdminProperties.getRunTime());
             return judge(process, out);
-
         } catch (Exception e) {
             return new HashMap<Boolean, String>() {{
                 put(false, e.toString());
@@ -142,8 +150,11 @@ public class OjService {
     public Map<Boolean, String> run(String command, String in, String out) {
         Process process = null;
         try {
-            process = Runtime.getRuntime().exec(ojProperties.getRunSh());
-            execWrite(new BufferedWriter(new OutputStreamWriter(process.getOutputStream())), command, in);
+            process = Runtime.getRuntime().exec(ojAdminProperties.getRunSh());
+            process = pb.command(Arrays.asList(command.split("\\s+"))).start();
+            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+            bw.write(in);
+            bw.close();
             process.waitFor();
             return judge(process, out);
 
@@ -197,35 +208,6 @@ public class OjService {
         }
 
         return sb.toString();
-    }
-
-    /**
-     * 传入指令
-     *
-     * @param bw      输出流
-     * @param command 指令
-     */
-    private void execWrite(BufferedWriter bw, String command) throws IOException {
-        bw.write(String.format("cd %s && %s", ojProperties.getCodePath(), command));
-        bw.newLine();
-        bw.flush();
-        bw.close();
-    }
-
-    /**
-     * 传入指令
-     *
-     * @param bw      输出流
-     * @param command 指令
-     * @param in      传入参数
-     */
-    private void execWrite(BufferedWriter bw, String command, String in) throws IOException {
-        bw.write(String.format("cd %s && %s", ojProperties.getCodePath(), command));
-        bw.newLine();
-        bw.write(in);
-        bw.newLine();
-        bw.flush();
-        bw.close();
     }
 
 }

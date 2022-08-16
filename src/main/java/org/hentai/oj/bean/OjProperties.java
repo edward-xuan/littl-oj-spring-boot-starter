@@ -18,7 +18,6 @@ public class OjProperties {
         put("go", Arrays.asList("go", "go build <f>.go", "./<f>"));
     }};
 
-
     public OjProperties() {
     }
 

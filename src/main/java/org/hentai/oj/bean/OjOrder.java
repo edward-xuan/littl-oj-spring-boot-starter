@@ -1,6 +1,6 @@
 package org.hentai.oj.bean;
 
-public class OjParamName {
+public class OjOrder {
 
     public static String RUN = "run";
     public static String COMPILE = "compile";
